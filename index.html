@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Title Explorer-Mood 🎮</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+<style>
+body{
+    background:black;
+    color:white;
+    text-align:center;
+    font-family:Arial;
+    touch-action:none; /* Hana waya yin scroll lokacin wasa */
+}
+
+h1{color:yellow;}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(10,30px);
+    gap:2px;
+    justify-content:center;
+    margin-top:20px;
+}
+
+.cell{
+    width:30px;
+    height:30px;
+    background:#222;
+    border:1px solid #111;
+}
+
+.block{
+    background:red;
+}
+
+.fixed{
+    background:blue;
+}
+
+/* Buttons don waya */
+.controls{
+    margin-top:15px;
+}
+button{
+    width:60px;
+    height:60px;
+    font-size:24px;
+    margin:3px;
+    background:#333;
+    color:white;
+    border:2px solid yellow;
+    border-radius:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎮 Title Explorer-Mood</h1>
+<h2>Score: <span id="score">0</span></h2>
+
+<div class="grid" id="grid"></div>
+
+<!-- 2. Touches - Buttons don waya -->
+<div class="controls">
+    <button id="left">◀</button>
+    <button id="rotate">⟳</button>
+    <button id="right">▶</button>
+    <br>
+    <button id="down">▼</button>
+</div>
+
+<script>
+
+const grid = document.getElementById("grid");
+const width = 10;
+const height = 20;
+let cells = [];
+let score = 0;
+
+// Create grid
+for(let i=0;i<width*height;i++){
+    let div = document.createElement("div");
+    div.classList.add("cell");
+    grid.appendChild(div);
+    cells.push(div);
+}
+
+// Tetris shapes - yanzu muna adana dukkan juyawa
+const shapes = [
+    [[1, width+1, width*2+1, 2], [width, width+1, width+2, width*2+1]], // L + juyawa
+    [[0, 1, width, width+1]], // square - bai juya ba
+    [[1, width, width+1, width+2], [1, width+1, width+2, width*3+1]], // T + juyawa
+];
+
+let currentShape = Math.floor(Math.random()*shapes.length);
+let currentRotation = 0;
+let current = shapes[currentShape][currentRotation];
+let position = 3;
+
+// Draw
+function draw(){
+    current.forEach(i=>{
+        if(position + i >= 0)
+            cells[position + i].classList.add("block");
+    });
+}
+
+// Clear
+function undraw(){
+    current.forEach(i=>{
+        if(position + i >= 0)
+            cells[position + i].classList.remove("block");
+    });
+}
+
+// Move Down
+function moveDown(){
+    undraw();
+    position += width;
+
+    if(checkCollision()){
+        position -= width;
+        freeze();
+        newBlock();
+    }
+
+    draw();
+}
+
+// 1. ROTATION - sabon code
+function rotate(){
+    undraw();
+    let nextRotation = currentRotation + 1;
+    if(nextRotation >= shapes[currentShape].length) nextRotation = 0;
+
+    let oldCurrent = current;
+    current = shapes[currentShape][nextRotation];
+
+    // Idan ya bugi bango bayan juyawa, koma baya
+    if(checkCollision()){
+        current = oldCurrent;
+    } else {
+        currentRotation = nextRotation;
+    }
+
+    draw();
+}
+
+// Collision
+function checkCollision(){
+    return current.some(i=>{
+        let next = position + i;
+        return next >= width*height ||
+               next < 0 ||
+               cells[next].classList.contains("fixed") ||
+               (position % width) + (i % width) < 0 ||
+               (position % width) + (i % width) >= width;
+    });
+}
+
+// Freeze block
+function freeze(){
+    current.forEach(i=>{
+        if(position + i >= 0)
+            cells[position + i].classList.add("fixed");
+    });
+    clearLines();
+}
+
+// New Block
+function newBlock(){
+    currentShape = Math.floor(Math.random()*shapes.length);
+    currentRotation = 0;
+    current = shapes[currentShape][currentRotation];
+    position = 3;
+    if(checkCollision()){ alert("Game Over! Score: " + score); }
+}
+
+// Move Left
+function moveLeft(){
+    undraw();
+    position--;
+    if(checkCollision()) position++;
+    draw();
+}
+
+// Move Right
+function moveRight(){
+    undraw();
+    position++;
+    if(checkCollision()) position--;
+    draw();
+}
+
+// Controls - keyboard
+document.addEventListener("keydown", e=>{
+    if(e.key === "ArrowLeft") moveLeft();
+    if(e.key === "ArrowRight") moveRight();
+    if(e.key === "ArrowDown") moveDown();
+    if(e.key === "ArrowUp") rotate(); // 1. Rotation da keyboard
+});
+
+// 2. TOUCHES - Buttons don waya
+document.getElementById("left").onclick = moveLeft;
+document.getElementById("right").onclick = moveRight;
+document.getElementById("down").onclick = moveDown;
+document.getElementById("rotate").onclick = rotate;
+
+// Clear lines
+function clearLines(){
+    for(let i=height-1;i>=0;i--){
+        let row = [];
+        for(let j=0;j<width;j++){
+            row.push(i*width + j);
+        }
+
+        if(row.every(i=>cells[i].classList.contains("fixed"))){
+            score += 10;
+            document.getElementById("score").innerText = score;
+
+            row.forEach(i=>{
+                cells[i].classList.remove("fixed");
+            });
+
+            // Sauke dukkan layin sama
+            for(let k=i; k>0; k--){
+                for(let j=0;j<width;j++){
+                    if(cells[(k-1)*width+j].classList.contains("fixed")){
+                        cells[k*width+j].classList.add("fixed");
+                        cells[(k-1)*width+j].classList.remove("fixed");
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Game loop
+setInterval(moveDown, 500);
+
+// Start
+draw();
+
+</script>
+
+</body>
+  </html>
