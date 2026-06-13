@@ -2,7 +2,7 @@
 <html lang="ha">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tetris 3D Mood Game</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
@@ -12,10 +12,11 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             min-height: 100vh;
             color: #fff;
             overflow: hidden;
+            padding-top: 10px;
         }
 
         /* Top Bar Configuration */
@@ -24,12 +25,11 @@
             justify-content: space-between;
             align-items: center;
             width: 100%;
-            max-width: 340px;
-            margin-bottom: 10px;
-            padding: 0 5px;
+            max-width: 300px;
+            margin-bottom: 5px;
         }
         h1 {
-            font-size: 20px;
+            font-size: 18px;
             color: #00ffcc;
             text-shadow: 0 0 10px rgba(0,255,204,0.4);
         }
@@ -37,80 +37,82 @@
             background: #ff0055;
             color: white;
             border: none;
-            padding: 6px 15px;
-            border-radius: 8px;
+            padding: 5px 12px;
+            border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(255,0,85,0.3);
+            font-size: 12px;
         }
 
         #score-board {
-            font-size: 18px;
+            font-size: 16px;
             background: rgba(255,255,255,0.08);
-            padding: 6px 20px;
+            padding: 4px 15px;
             border-radius: 20px;
             border: 1px solid rgba(255,255,255,0.1);
-            margin-bottom: 15px;
+            margin-bottom: 8px;
             color: #ffcc00;
             font-weight: bold;
         }
 
-        /* Tetris Board styling with 3D shadow effect */
+        /* An rage girman akwatinan nan don maballan su fito a waya */
         #game-board-wrapper {
             perspective: 500px;
         }
         #game-board {
             display: grid;
-            grid-template-columns: repeat(10, 28px);
-            grid-template-rows: repeat(20, 28px);
-            gap: 2px;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 6px;
-            border-radius: 10px;
+            grid-template-columns: repeat(10, 22px);
+            grid-template-rows: repeat(20, 22px);
+            gap: 1px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 5px;
+            border-radius: 8px;
             border: 2px solid #333;
             transform: rotateX(10deg);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
         }
         .cell {
             background: rgba(255, 255, 255, 0.03);
-            border-radius: 3px;
+            border-radius: 2px;
         }
 
         /* Neon 3D Block designs */
         .filled {
-            box-shadow: inset -3px -3px 5px rgba(0,0,0,0.4), 
-                        inset 3px 3px 5px rgba(255,255,255,0.4);
+            box-shadow: inset -2px -2px 4px rgba(0,0,0,0.4), 
+                        inset 2px 2px 4px rgba(255,255,255,0.4);
             border: 1px solid rgba(0,0,0,0.2);
         }
 
-        /* Mobile Controller Buttons (Touches) */
+        /* Sabon Tsarin Maballan Motsi (Siffar giciye don dacewa da yatsa) */
         #controls {
             display: grid;
-            grid-template-columns: repeat(3, 70px);
-            grid-template-rows: repeat(2, 60px);
-            gap: 12px;
-            margin-top: 20px;
-            justify-content: center;
+            grid-template-columns: repeat(3, 65px);
+            grid-template-rows: repeat(2, 50px);
+            gap: 10px;
+            margin-top: 15px;
+            width: 100%;
+            max-width: 240px;
         }
         .ctrl-btn {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.12);
             border: 1px solid rgba(255,255,255,0.2);
             color: white;
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
-            border-radius: 12px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            touch-action: manipulation;
         }
         .ctrl-btn:active {
             background: #00ffcc;
             color: #000;
-            transform: scale(0.95);
+            transform: scale(0.9);
         }
-        #btn-up { grid-column: 2; }
+        #btn-up { grid-column: 2; background: rgba(0, 255, 204, 0.15); border-color: #00ffcc; }
         #btn-left { grid-column: 1; grid-row: 2; }
         #btn-down { grid-column: 2; grid-row: 2; }
         #btn-right { grid-column: 3; grid-row: 2; }
@@ -129,7 +131,6 @@
         <div id="game-board"></div>
     </div>
 
-    <!-- Maballan Taba Allon Waya (Touches) -->
     <div id="controls">
         <button class="ctrl-btn" id="btn-up" onclick="rotatePiece()">↻</button>
         <button class="ctrl-btn" id="btn-left" onclick="moveLeft()">←</button>
@@ -146,19 +147,17 @@
         let score = 0;
         let board = Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_WIDTH).fill(0));
 
-        // Siffofin kaloli da tubalan Tetris
         const SHAPES = [
-            [[1, 1, 1, 1]], // I-Block
-            [[1, 1, 1], [0, 1, 0]], // T-Block
-            [[1, 1, 1], [1, 0, 0]], // L-Block
-            [[1, 1], [1, 1]], // O-Block
-            [[1, 1, 0], [0, 1, 1]]  // Z-Block
+            [[1, 1, 1, 1]], 
+            [[1, 1, 1], [0, 1, 0]], 
+            [[1, 1, 1], [1, 0, 0]], 
+            [[1, 1], [1, 1]], 
+            [[1, 1, 0], [0, 1, 1]]  
         ];
         const COLORS = ['#00ffcc', '#ffcc00', '#ff0055', '#9900ff', '#ff7700'];
 
         let currentShape, currentColor, currentX, currentY;
 
-        // Fara gina filin wasa
         function initBoard() {
             boardElement.innerHTML = '';
             for (let r = 0; r < BOARD_HEIGHT; r++) {
@@ -171,7 +170,6 @@
             }
         }
 
-        // Fito da sabon tubali
         function spawnPiece() {
             const index = Math.floor(Math.random() * SHAPES.length);
             currentShape = SHAPES[index];
@@ -183,115 +181,3 @@
                 alert("Wasan ya ƙare! (Game Over)");
                 board = Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_WIDTH).fill(0));
                 score = 0;
-                scoreElement.innerText = score;
-            }
-        }
-
-        function draw() {
-            // Wanke allo
-            for (let r = 0; r < BOARD_HEIGHT; r++) {
-                for (let c = 0; c < BOARD_WIDTH; c++) {
-                    const cell = document.getElementById(`r-${r}-c-${c}`);
-                    cell.className = 'cell';
-                    cell.style.backgroundColor = board[r][c] || '';
-                    if (board[r][c]) cell.classList.add('filled');
-                }
-            }
-            // Zana tubali mai tafiya yanzu
-            for (let r = 0; r < currentShape.length; r++) {
-                for (let c = 0; c < currentShape[r].length; c++) {
-                    if (currentShape[r][c]) {
-                        const cell = document.getElementById(`r-${currentY + r}-c-${currentX + c}`);
-                        if (cell) {
-                            cell.style.backgroundColor = currentColor;
-                            cell.classList.add('filled');
-                        }
-                    }
-                }
-            }
-        }
-
-        function canMove(nextX, nextY, shape) {
-            for (let r = 0; r < shape.length; r++) {
-                for (let c = 0; c < shape[r].length; c++) {
-                    if (shape[r][c]) {
-                        let x = nextX + c;
-                        let y = nextY + r;
-                        if (x < 0 || x >= BOARD_WIDTH || y >= BOARD_HEIGHT) return false;
-                        if (y >= 0 && board[y][x]) return false;
-                    }
-                }
-            }
-            return true;
-        }
-
-        function lockPiece() {
-            for (let r = 0; r < currentShape.length; r++) {
-                for (let c = 0; c < currentShape[r].length; c++) {
-                    if (currentShape[r][c]) {
-                        if (currentY + r >= 0) {
-                            board[currentY + r][currentX + c] = currentColor;
-                        }
-                    }
-                }
-            }
-            clearLines();
-            spawnPiece();
-        }
-
-        function clearLines() {
-            for (let r = BOARD_HEIGHT - 1; r >= 0; r--) {
-                if (board[r].every(cell => cell !== 0)) {
-                    board.splice(r, 1);
-                    board.unshift(Array(BOARD_WIDTH).fill(0));
-                    score += 100;
-                    scoreElement.innerText = score;
-                    r++; 
-                }
-            }
-        }
-
-        // Ayyukan Maballan Taba Allon Waya (Controller Actions)
-        function moveLeft() { if (canMove(currentX - 1, currentY, currentShape)) { currentX--; draw(); } }
-        function moveRight() { if (canMove(currentX + 1, currentY, currentShape)) { currentX++; draw(); } }
-        function moveDown() {
-            if (canMove(currentX, currentY + 1, currentShape)) {
-                currentY++;
-            } else {
-                lockPiece();
-            }
-            draw();
-        }
-
-        // Juyawa (Rotations)
-        function rotatePiece() {
-            const kicked = [];
-            for (let r = 0; r < currentShape[0].length; r++) {
-                kicked.push([]);
-                for (let c = currentShape.length - 1; c >= 0; c--) {
-                    kicked[r].push(currentShape[c][r]);
-                }
-            }
-            if (canMove(currentX, currentY, kicked)) {
-                currentShape = kicked;
-                draw();
-            }
-        }
-
-        // Maballin Exit (Exit Button Function)
-        function exitGame() {
-            if (confirm("Kana son fita daga wasan?")) {
-                window.location.href = "about:blank"; // Zai rufe ko ya fita daga shafin
-            }
-        }
-
-        // Sanya wasan tafiya da kansa kowane sakan 1
-        setInterval(moveDown, 1000);
-
-        // Fara komai
-        initBoard();
-        spawnPiece();
-        draw();
-    </script>
-</body>
-    </html>
